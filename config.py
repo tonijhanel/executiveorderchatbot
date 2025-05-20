@@ -13,7 +13,7 @@ UI_CONFIG = {
     "APP_TITLE": "Presidential Executive Order Analyzer",
     "APP_VERSION": "1.0.0",
     "DEVELOPER_NAME": "Toni Williams",
-    "DEVELOPER_GITHUB": "https://github.com/tonijhanel",
+    "DEVELOPER_GITHUB": "https://github.com/tonijhanel/executiveorderchatbot",
 }
 
 # API Configuration
@@ -43,7 +43,7 @@ Here's how to use it:
 
 **Examples of questions you can ask:**
 * General questions
-    * Based on the information provided, what is presidents Bidens stance on immigration?
+    * Based on the information provided, what is president Bidens stance on immigration?
 * Specific Executive Orders 
     * (Summarize executive order 14257, and provide a summary and sentiment analysis)
 * Policy implications

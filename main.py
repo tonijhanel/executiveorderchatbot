@@ -29,7 +29,11 @@ def format_source_documents(source_documents: List[Dict]) -> str:
             unique_urls.add(url)
             sources_string += f"--- Source ---\n"
             sources_string += f"URL: {url}\n"
-            sources_string += f"Executive Order Number: {doc.metadata.get('executive_order_number', 'N/A')}\n\n"
+            # Convert executive order number to string and remove decimal places
+            eo_number = doc.metadata.get('executive_order_number', 'N/A')
+            if isinstance(eo_number, float):
+                eo_number = str(int(eo_number))
+            sources_string += f"Executive Order Number: {eo_number}\n\n"
             count += 1
 
     return sources_string if unique_urls else "No unique sources found."
