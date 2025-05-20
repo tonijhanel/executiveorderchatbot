@@ -21,7 +21,7 @@ API_CONFIG = {
     "OPENAI_MODEL": os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
     "EMBEDDING_MODEL": os.getenv("EMBEDDING_MODEL", "text-embedding-3-large"),
     "PINECONE_INDEX": os.getenv("PINECONE_INDEX", "executiveorderscleantxt"),
-    "MAX_SOURCES": int(os.getenv("MAX_SOURCES", "2")),
+    "MAX_SOURCES": int(os.getenv("MAX_SOURCES", "3")),
     "TEMPERATURE": float(os.getenv("TEMPERATURE", "0")),
 }
 
