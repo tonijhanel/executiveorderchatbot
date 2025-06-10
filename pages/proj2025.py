@@ -1,24 +1,40 @@
 import streamlit as st
-from typing import List, Dict, Any, Tuple
-
-# Set page configuration
-st.set_page_config(
-    page_title="Executive Orders",
-    page_icon="📋",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-from backend.core import run_llm
 from config import get_config
+from backend.projcore import run_llm
+from typing import List, Dict, Any
 
 # Get configuration
 config = get_config()
 
-# Constants
-SIDEBAR_BG_COLOR = "#19253F"
-TEXT_COLOR = "#FFFFFF"
-HEADER_COLOR = "#19253F"
+# Project 2025 specific instructions
+INSTRUCTIONS_TEXT = """
+This bot helps you understand and analyze Project 2025, a comprehensive plan for the next conservative administration. 
+Here's how to use it:
+
+1. **Type your question** about Project 2025 in the prompt box. You can ask about specific policies, plans, or get a general analysis.
+2. Click Submit or "Cntrl + Enter" to get an AI-generated response
+
+**Examples of questions you can ask:**
+* General questions
+    * What are the main goals of Project 2025?
+    * How does Project 2025 plan to handle immigration?
+* Specific policy areas
+    * What are Project 2025's plans for education reform?
+    * How does Project 2025 propose to restructure the federal government?
+* Historical context
+    * How does Project 2025 compare to previous conservative policy initiatives?
+* Implementation details
+    * What is the timeline for implementing Project 2025's proposals?
+    * Which federal agencies would be most affected by Project 2025?
+"""
+
+# Set page config
+st.set_page_config(
+    page_title="Project 2025",
+    page_icon="📚",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # Helper Functions
 def format_source_documents(source_documents: List[Dict]) -> str:
@@ -36,41 +52,29 @@ def format_source_documents(source_documents: List[Dict]) -> str:
         if url and url not in unique_urls:
             unique_urls.add(url)
             sources_string += f"--- Source ---\n"
-            sources_string += f"URL: {url}\n"
-            # Convert executive order number to string and remove decimal places
-            eo_number = doc.metadata.get('executive_order_number', 'N/A')
-            if isinstance(eo_number, float):
-                eo_number = str(int(eo_number))
-            sources_string += f"Executive Order Number: {eo_number}\n\n"
+            sources_string += f"URL: {url}\n\n"
             count += 1
 
     return sources_string if unique_urls else "No unique sources found."
 
-def create_sources_string(sources_urls: set[str]) -> str:
-    """Creates a formatted string of source URLs."""
-    if not sources_urls:
-        return ""
-    sources_list = list(sources_urls)
-    return "sources:\n" + "\n".join(f"{i+1}. {source}" for i, source in enumerate(sources_list))
-
 def initialize_session_state() -> None:
     """Initialize session state variables if they don't exist."""
-    if "eo_chat_answers_history" not in st.session_state:
-        st.session_state["eo_user_prompt_history"] = []
-        st.session_state["eo_chat_answers_history"] = []
-        st.session_state["eo_chat_history"] = []
+    if "proj2025_chat_answers_history" not in st.session_state:
+        st.session_state["proj2025_user_prompt_history"] = []
+        st.session_state["proj2025_chat_answers_history"] = []
+        st.session_state["proj2025_chat_history"] = []
 
 def clear_chat_history() -> None:
     """Clear all chat history from session state."""
-    st.session_state["eo_user_prompt_history"] = []
-    st.session_state["eo_chat_answers_history"] = []
-    st.session_state["eo_chat_history"] = []
+    st.session_state["proj2025_user_prompt_history"] = []
+    st.session_state["proj2025_chat_answers_history"] = []
+    st.session_state["proj2025_chat_history"] = []
     st.rerun()
 
 def display_chat_history() -> None:
     """Display the chat history in the UI."""
-    if st.session_state["eo_chat_answers_history"]:
-        for generate_response, user_query in zip(st.session_state["eo_chat_answers_history"], st.session_state["eo_user_prompt_history"]):
+    if st.session_state["proj2025_chat_answers_history"]:
+        for generate_response, user_query in zip(st.session_state["proj2025_chat_answers_history"], st.session_state["proj2025_user_prompt_history"]):
             st.chat_message("user").write(user_query)
             st.chat_message("assistant").write(generate_response)
 
@@ -78,15 +82,14 @@ def handle_chat_submission(prompt: str) -> None:
     """Handle the chat submission and update session state."""
     try:
         with st.spinner("Generating response..."):
-            generate_response = run_llm(query=prompt, chat_history=st.session_state["eo_chat_history"])
-            sources = set(doc.metadata["html_url"] for doc in generate_response["source_documents"])
-            formatted_sources = format_source_documents(generate_response["source_documents"])
-            formatted_response_with_sources = f"{generate_response['result']} \n\n {formatted_sources}"
+            generate_response = run_llm(query=prompt, chat_history=st.session_state["proj2025_chat_history"])
+            # formatted_sources = format_source_documents(generate_response["source_documents"])
+            formatted_response_with_sources = f"{generate_response['result']}"
 
-            st.session_state["eo_user_prompt_history"].append(prompt)
-            st.session_state["eo_chat_answers_history"].append(formatted_response_with_sources)
-            st.session_state["eo_chat_history"].append(("human", prompt))
-            st.session_state["eo_chat_history"].append(("ai", generate_response["result"]))
+            st.session_state["proj2025_user_prompt_history"].append(prompt)
+            st.session_state["proj2025_chat_answers_history"].append(formatted_response_with_sources)
+            st.session_state["proj2025_chat_history"].append(("human", prompt))
+            st.session_state["proj2025_chat_history"].append(("ai", generate_response["result"]))
             
             st.rerun()
     except Exception as e:
@@ -119,31 +122,6 @@ MAIN_CSS = """
         font-weight: 600 !important;
         letter-spacing: -1px;
     }
-    /* Subtext and meta info */
-    .subtext, .meta-info {
-        color: #6B7280 !important;
-        font-size: 1rem !important;
-        font-family: 'Georgia', 'Times New Roman', Times, serif !important;
-    }
-    /* Executive order list styling */
-    .eo-title {
-        font-size: 2.2rem;
-        font-family: "Arial", sans-serif;
-        font-weight: 500;
-        margin-bottom: 0.2rem;
-        margin-top: 2.2rem;
-        color: #19253F;
-    }
-    .eo-meta {
-        color: #6B7280;
-        font-size: 1.1rem;
-        margin-bottom: 1.5rem;
-    }
-    /* Optional: Add a subtle divider */
-    .eo-divider {
-        border-bottom: 1px solid #E5E7EB;
-        margin: 1.5rem 0;
-    }
     .stApp {
         display: flex;
         flex-direction: column;
@@ -153,8 +131,8 @@ MAIN_CSS = """
         flex: 1;
         overflow-y: auto;
         padding: 1rem;
-        margin-bottom: 0px; /* Space for input form */
-        margin-top: 0.5rem !important; /* Reduce space above chat */
+        margin-bottom: 0px;
+        margin-top: 0.5rem !important;
     }
     .input-form {
         position: fixed;
@@ -170,39 +148,12 @@ MAIN_CSS = """
         min-height: 100px !important;
         resize: vertical !important;
     }
-    .button-col {
-        display: flex;
-        align-items: flex-end;  /* Bottom align */
-        height: 100%;
-        justify-content: center;
-    }
-    .button-align-bottom {
-        height: 100%;
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-    }
-    /* Reduce space below the header */
-    h1, .stMarkdown h1 {
-        margin-bottom: 0.5rem !important;
-    }
-    /* Reduce default block spacing */
-    section.main > div.block-container {
-        padding-top: 1rem !important;
-    }
-    /* Reduce space for stElementContainer */
-    .stElementContainer {
-        min-height: 0 !important;
-       
-        margin: 0 !important;
-        padding: 0 !important;
-    }
     .main-flex {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.5rem; /* Adjust this for spacing between header and chat */
-        margin-top: 1.5rem; /* Adjust or remove as needed */
+        gap: 0.5rem;
+        margin-top: 1.5rem;
     }
     .input-row {
         display: flex;
@@ -224,10 +175,14 @@ MAIN_CSS = """
     </style>
 """
 
+# Apply CSS
+st.markdown(SIDEBAR_CSS, unsafe_allow_html=True)
+st.markdown(MAIN_CSS, unsafe_allow_html=True)
+
 # Add sidebar content
 with st.sidebar:
     # Custom Navigation
-    
+
     st.page_link("main.py", label="Executive Orders", icon="📋")
     st.page_link("pages/proj2025.py", label="Project 2025", icon="📚")
     
@@ -235,19 +190,15 @@ with st.sidebar:
     
     # Instructions section
     st.header("Instructions")
-    st.markdown(config["instructions"])
+    st.markdown(INSTRUCTIONS_TEXT)
     
     # Developer information section
     st.markdown("---")  # Add a separator
     st.header("Developer Information")
     st.markdown(config["dev_info"])
 
-# Apply CSS
-st.markdown(SIDEBAR_CSS, unsafe_allow_html=True)
-st.markdown(MAIN_CSS, unsafe_allow_html=True)
-
-# Main UI
-st.header(config["ui"]["APP_TITLE"])
+# Main content
+st.title("Project 2025 Analyzer")
 
 # Initialize session state
 initialize_session_state()
@@ -263,7 +214,7 @@ with st.form("prompt_form", clear_on_submit=True):
     st.markdown('<div class="input-row">', unsafe_allow_html=True)
     prompt = st.text_area(
         "Prompt",
-        placeholder=config["chat"]["PROMPT_PLACEHOLDER"],
+        placeholder="Enter your question about Project 2025...",
         key="prompt_input",
         height=config["chat"]["TEXT_AREA_HEIGHT"]
     )
@@ -280,4 +231,4 @@ if prompt and submit_button:
     handle_chat_submission(prompt)
 
 if clear_button:
-    clear_chat_history()
+    clear_chat_history() 

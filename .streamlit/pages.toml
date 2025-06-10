@@ -1,0 +1,7 @@
+[[pages]]
+path = "main.py"
+name = "Executive Orders"
+
+[[pages]]
+path = "pages/proj2025.py"
+name = "Project 2025" 

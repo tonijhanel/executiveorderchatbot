@@ -3,4 +3,6 @@ primaryColor = "#19253F"
 backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#F7F7F7"
 textColor = "#19253F"
-font = "serif" 
+font = "sans-serif" 
+[client]
+showSidebarNavigation = false
